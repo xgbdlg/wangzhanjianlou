@@ -2,7 +2,7 @@
 # 拍卖捡漏引擎 —— 实时监听 Empire WebSocket 拍卖事件，
 # 计算折扣 → 自动出价 → 止损退出 → 记录历史。
 #
-# ⚠️ 注意：Empire WebSocket 事件名称基于推测，实际字段需抓包确认。
+# ⚠️ 事件名和数据字段见 后端/empire_config.py，抓包后修改该文件即可
 
 import asyncio
 import logging
@@ -12,6 +12,7 @@ from typing import Any, Callable, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio.session import async_sessionmaker
 
+from empire_config import ACTIVE_STATUSES, EMPIRE_WS as WSCFG
 from models import AuctionDeal, BidRecord
 from services.auction_state import (
     AUCTION_DURATION,
@@ -192,34 +193,32 @@ class AuctionSnipeEngine:
         event_type = event.get("event", "")
         data = event.get("data", {})
 
+        EV = WSCFG["events"]
+        EVF = WSCFG["event_fields"]
         try:
-            if event_type == "auction_started":
-                await self._on_auction_started(data)
-            elif event_type == "auction_bid":
-                await self._on_auction_bid(data)
-            elif event_type == "auction_won":
-                await self._on_auction_won(data)
-            elif event_type == "auction_expired":
-                await self._on_auction_expired(data)
+            if event_type == EV["auction_started"]:
+                await self._on_auction_started(data, EVF)
+            elif event_type == EV["auction_bid"]:
+                await self._on_auction_bid(data, EVF)
+            elif event_type == EV["auction_won"]:
+                await self._on_auction_won(data, EVF)
+            elif event_type == EV["auction_expired"]:
+                await self._on_auction_expired(data, EVF)
         except Exception as exc:
             logger.error("处理拍卖事件 [%s] 异常: %s", event_type, exc, exc_info=True)
 
     # ────────────────────────── 事件：拍卖开始 ──────────────────────────
 
-    async def _on_auction_started(self, data: dict) -> None:
-        """处理 auction_started 事件。
-
-        ⚠️ 推测字段: id, market_hash_name, wear, base_price, starting_bid
-        """
-        # ⚠️ 推测字段名，需根据抓包调整
-        auction_id = str(data.get("id") or data.get("auction_id", ""))
+    async def _on_auction_started(self, data: dict, EVF: dict) -> None:
+        """处理 auction_started 事件。字段名见 empire_config.py"""
+        f = EVF["auction_started"]
+        auction_id = str(data.get(f["auction_id"]) or data.get("auction_id", "") or data.get("id", ""))
         if not auction_id:
             return
-
-        raw_name = str(data.get("market_hash_name", ""))
-        wear = str(data.get("wear", ""))
-        base_price = float(data.get("base_price", 0))
-        starting_bid = float(data.get("starting_bid", 0))
+        raw_name = str(data.get(f["name"], ""))
+        wear = str(data.get(f["wear"], ""))
+        base_price = float(data.get(f["base_price"], 0))
+        starting_bid = float(data.get(f["starting_bid"], 0))
 
         if not raw_name or base_price <= 0:
             return
@@ -307,18 +306,10 @@ class AuctionSnipeEngine:
 
     # ────────────────────────── 事件：有人出价 ──────────────────────────
 
-    async def _on_auction_bid(self, data: dict) -> None:
-        """处理 auction_bid 事件。
-
-        逻辑:
-          1. 更新 current_bid → 重新计算折扣
-          2. 止损检查（最高优先级）
-          3. 如果折扣恢复，重新竞价
-          4. 如果 auto_bid 开启，自动加价
-
-        ⚠️ 推测字段: auction_id, new_bid, bidder_name
-        """
-        auction_id = str(data.get("auction_id") or data.get("id", ""))
+    async def _on_auction_bid(self, data: dict, EVF: dict) -> None:
+        """处理 auction_bid 事件。字段名见 empire_config.py"""
+        f = EVF["auction_bid"]
+        auction_id = str(data.get(f["auction_id"]) or data.get("id", ""))
         if not auction_id or auction_id not in self.active_auctions:
             return
 
@@ -326,8 +317,8 @@ class AuctionSnipeEngine:
         if item.status in (AuctionStatus.WON, AuctionStatus.ABORTED, AuctionStatus.EXPIRED):
             return
 
-        # 更新当前价
-        new_bid = float(data.get("new_bid") or data.get("amount", 0))
+        # 更新当前价（字段名见 empire_config.py）
+        new_bid = float(data.get(f.get("new_bid", "new_bid")) or data.get("amount", 0))
         if new_bid <= item.current_bid:
             return  # 出价没有涨，忽略
 
@@ -367,20 +358,16 @@ class AuctionSnipeEngine:
 
     # ────────────────────────── 事件：竞拍成功 ──────────────────────────
 
-    async def _on_auction_won(self, data: dict) -> None:
-        """处理 auction_won 事件。
-
-        ⚠️ 推测字段: auction_id, winner_name, final_bid
-        """
-        auction_id = str(data.get("auction_id") or data.get("id", ""))
+    async def _on_auction_won(self, data: dict, EVF: dict) -> None:
+        """处理 auction_won 事件。字段名见 empire_config.py"""
+        f = EVF["auction_won"]
+        auction_id = str(data.get(f["auction_id"]) or data.get("id", ""))
         if not auction_id or auction_id not in self.active_auctions:
             return
 
         item = self.active_auctions[auction_id]
-        final_bid = float(data.get("final_bid", item.current_bid))
-
-        # ⚠️ 推测：判断是否自己中标（需根据实际 API 调整）
-        winner = str(data.get("winner_name", ""))
+        final_bid = float(data.get(f.get("final_bid", "final_bid"), item.current_bid))
+        winner = str(data.get(f.get("winner_name", "winner_name"), ""))
         is_me = winner == self.account_name or item.bid_count > 0  # 简化判断
 
         if is_me:
@@ -396,8 +383,8 @@ class AuctionSnipeEngine:
 
     # ────────────────────────── 事件：拍卖过期 ──────────────────────────
 
-    async def _on_auction_expired(self, data: dict) -> None:
-        """处理 auction_expired 事件 + 标记流拍重挂监控。"""
+    async def _on_auction_expired(self, data: dict, EVF: dict) -> None:
+        """处理 auction_expired 事件 + 流拍重挂监控。字段名见 empire_config.py"""
         auction_id = str(data.get("auction_id") or data.get("id", ""))
         if not auction_id or auction_id not in self.active_auctions:
             return

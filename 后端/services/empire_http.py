@@ -1,12 +1,14 @@
 # services/empire_http.py
 # CSGOEmpire HTTP API 客户端，带令牌桶限流和指数退避重试
 #
-# ⚠️ 注意：部分接口参数基于推测，标注了"推测接口"，实际需根据抓包调整。
+# ⚠️ 接口路径和字段名配置在 后端/empire_config.py，抓包后修改该文件即可
 
 import asyncio
 import logging
 import time
 from typing import Any, Optional
+
+from empire_config import ACTIVE_STATUSES, EMPIRE_HTTP as CFG
 
 import httpx
 
@@ -105,54 +107,35 @@ class EmpireHTTPClient:
     # ────────────────────────── 公开 API ──────────────────────────
 
     async def get_items(self, per_page: int = 100) -> list[dict]:
-        """获取可交易物品列表。
-
-        GET /api/v2/trading/items?per_page={per_page}
-
-        ⚠️ 推测接口：endpoint 和响应字段基于常见格式推断。
-        返回每个物品的 id, market_hash_name, wear, price, status 等。
-        """
+        """获取可交易物品列表。路径和字段名见 empire_config.py"""
+        c = CFG["get_items"]
         return await self._request(
-            "GET",
-            "/api/v2/trading/items",
-            params={"per_page": per_page},
+            c["method"], c["path"],
+            params={**c.get("params", {}), "per_page": per_page},
         )
 
     async def get_balance(self) -> dict:
-        """获取用户余额。
-
-        GET /api/v2/user/balance
-
-        ⚠️ 推测接口。返回 {"balance": float, "balance_usd": float}。
-        """
-        return await self._request("GET", "/api/v2/user/balance")
+        """获取用户余额。路径见 empire_config.py"""
+        c = CFG["get_balance"]
+        return await self._request(c["method"], c["path"])
 
     async def withdraw_item(self, item_id: str) -> dict:
-        """购买 / 取回物品。
-
-        POST /api/v2/trading/withdraw
-        body: {"item_id": item_id}
-
-        ⚠️ 推测接口，实际 API 参数和路径需根据抓包调整。
-        """
+        """购买/取回物品。路径和字段见 empire_config.py"""
+        c = CFG["withdraw_item"]
+        field = c["request_fields"]["item_id"]
         return await self._request(
-            "POST",
-            "/api/v2/trading/withdraw",
-            json_data={"item_id": item_id},
+            c["method"], c["path"], json_data={field: item_id},
         )
 
     async def place_auction_bid(self, auction_id: str, amount: float) -> dict:
-        """拍卖出价。
-
-        POST /api/v2/trading/auction/bid
-        body: {"auction_id": auction_id, "amount": amount}
-
-        ⚠️ 推测接口，实际 API 参数和路径需根据抓包调整。
-        """
+        """拍卖出价。路径和字段见 empire_config.py"""
+        c = CFG["place_auction_bid"]
         return await self._request(
-            "POST",
-            "/api/v2/trading/auction/bid",
-            json_data={"auction_id": auction_id, "amount": amount},
+            c["method"], c["path"],
+            json_data={
+                c["request_fields"]["auction_id"]: auction_id,
+                c["request_fields"]["amount"]: amount,
+            },
         )
 
     # ────────────────────────── 内部方法 ──────────────────────────

@@ -1,13 +1,14 @@
 # services/empire_ws.py
 # CSGOEmpire WebSocket 客户端，实现 Socket.IO Engine.IO v3 协议
 #
-# ⚠️ 注意：认证消息格式基于 Socket.IO 标准协议推测，
-# 实际需通过浏览器 DevTools 抓包确认。
+# ⚠️ 认证和事件名配置在 后端/empire_config.py，抓包后修改该文件即可
 
 import asyncio
 import json
 import logging
 from typing import Any, Callable, Optional
+
+from empire_config import EMPIRE_WS as WSCFG
 
 import websockets
 from websockets.exceptions import ConnectionClosed, WebSocketException
@@ -332,22 +333,16 @@ class EmpireWebSocketClient:
         logger.debug("未知 SIO 类型: %s", payload[:100])
 
     async def _send_auth(self) -> None:
-        """发送认证消息。
-
-        ⚠️ 推测接口：格式为 42["identify", {uid, token}]。
-        实际认证协议需通过浏览器 DevTools → Network → WS 抓包确认。
-        """
+        """发送认证消息。格式见 empire_config.py [待抓包]"""
+        auth_cfg = WSCFG["auth"]
         try:
-            auth_payload = json.dumps([
-                "identify",
-                {
-                    "uid": self.user_id or "",
-                    "token": self.api_key,
-                },
-            ], ensure_ascii=False)
+            payload_data = dict(auth_cfg["payload"])
+            payload_data["uid"] = self.user_id or payload_data.get("uid", "")
+            payload_data["token"] = self.api_key
+            auth_payload = json.dumps([auth_cfg["event"], payload_data], ensure_ascii=False)
             frame = f"42{auth_payload}"
             await self._ws.send(frame)  # type: ignore[union-attr]
-            logger.info("认证消息已发送 (identify)")
+            logger.info("认证消息已发送 (%s)", auth_cfg["event"])
         except Exception as exc:
             logger.error("发送认证消息失败: %s", exc)
 

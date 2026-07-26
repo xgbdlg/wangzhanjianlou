@@ -330,13 +330,14 @@ def _inject_ws_dispatcher(ws_client, engine: AuctionSnipeEngine) -> None:
     """
     original_callback = ws_client.on_message
 
+    from empire_config import EMPIRE_WS as WSCFG
+    EV = WSCFG["events"]
+
     async def dispatch_wrapper(event_name: str, data: dict) -> None:
         # 拍卖相关事件 → 拍卖引擎
-        if event_name.startswith("auction_"):
+        auction_events = [EV[k] for k in EV if k.startswith("auction_")]
+        if event_name in auction_events:
             await engine.handle_event({"event": event_name, "data": data})
-        # 市场相关事件 → 预留市场引擎分发
-        # elif event_name in ("new_item", "item_sold"):
-        #     ...
 
         # 继续调用原有回调（写入 last_event 等）
         if original_callback:
