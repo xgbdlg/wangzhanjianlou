@@ -49,3 +49,5 @@ release/
 .csgoempire-bot/
 # PyInstaller output
 build/CSGOEmpire*/
+CSGOEmpireSniper/
+legacy/
