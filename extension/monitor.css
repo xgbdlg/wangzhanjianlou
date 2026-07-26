@@ -1,0 +1,87 @@
+/* monitor.css - 监控面板样式 */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+  background: #0d1117;
+  color: #c9d1d9;
+  min-height: 100vh;
+}
+
+.monitor-container { max-width: 1400px; margin: 0 auto; padding: 16px; }
+
+h1 { font-size: 20px; color: #ffd700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+h2 { font-size: 15px; color: #ccc; margin-bottom: 8px; }
+
+.conn-badge {
+  font-size: 11px; padding: 3px 8px; border-radius: 10px; font-weight: 600;
+}
+.conn-badge.connected { background: #1b5e20; color: #4CAF50; }
+.conn-badge.disconnected { background: #b71c1c; color: #F44336; }
+
+/* 双栏 */
+.panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+@media (max-width: 900px) {
+  .panels { grid-template-columns: 1fr; }
+}
+
+.panel {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+/* 表格 */
+.table-wrap { max-height: 400px; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 11px; }
+th {
+  position: sticky; top: 0; background: #21262d; color: #8b949e;
+  padding: 6px 8px; text-align: left; z-index: 1;
+}
+td { padding: 5px 8px; border-bottom: 1px solid #21262d; }
+tr:hover { background: #1c2128; }
+
+/* 状态颜色 */
+.status-detected { color: #FFC107; font-weight: 600; }
+.status-bought   { color: #4CAF50; font-weight: 600; }
+.status-missed   { color: #9e9e9e; }
+.status-expired  { color: #F44336; }
+.status-bidding  { color: #4CAF50; font-weight: 600; }
+.status-waiting  { color: #FFC107; font-weight: 600; }
+.status-aborted  { color: #F44336; }
+.status-won      { color: #2196F3; font-weight: 700; }
+
+/* 倒计时 */
+.countdown-urgent { color: #F44336; animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: 0.5; } }
+
+/* 操作按钮 */
+.btn-sm {
+  font-size: 11px; padding: 3px 8px; border: none; border-radius: 4px;
+  cursor: pointer; font-weight: 600; color: #fff; margin: 1px;
+}
+.btn-buy    { background: #4CAF50; }
+.btn-bid    { background: #FF9800; }
+.btn-abort  { background: #F44336; }
+.btn-refresh { background: #30363d; color: #8b949e; }
+
+/* 日志 */
+.log-panel {
+  background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px;
+}
+.log-container {
+  max-height: 200px; overflow-y: auto; font-size: 11px;
+  font-family: "Cascadia Code", Consolas, monospace;
+}
+.log-entry {
+  padding: 3px 8px; border-bottom: 1px solid #21262d; display: flex; gap: 8px;
+}
+.log-time   { color: #8b949e; min-width: 70px; }
+.log-deal   { color: #FFC107; }
+.log-buy    { color: #4CAF50; }
+.log-stop   { color: #F44336; }
+.log-info   { color: #58a6ff; }
+.log-bid    { color: #FF9800; }
+.log-won    { color: #2196F3; }

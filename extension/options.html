@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSGOEmpire 捡漏助手 - 配置</title>
+<link rel="stylesheet" href="options.css">
+</head>
+<body>
+<div class="config-container">
+  <h1>⚙️ 配置中心</h1>
+
+  <!-- Tab 切换 -->
+  <div class="tabs">
+    <button class="tab active" data-tab="accounts">📋 账号管理</button>
+    <button class="tab" data-tab="strategy">🎯 策略设置</button>
+    <button class="tab" data-tab="data">💾 数据管理</button>
+  </div>
+
+  <!-- ============ Tab 1: 账号管理 ============ -->
+  <div id="tab-accounts" class="tab-content active">
+    <h2>已保存账号</h2>
+    <table id="accountsTable">
+      <thead>
+        <tr><th>名称</th><th>汇率</th><th>创建时间</th><th>操作</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <h2>添加账号</h2>
+    <form id="addAccountForm" class="form-grid">
+      <div class="field">
+        <label>账号名称</label>
+        <input type="text" id="accName" placeholder="如: 主账号" required>
+      </div>
+      <div class="field">
+        <label>API Key</label>
+        <input type="password" id="accApiKey" placeholder="CSGOEmpire API Key" required>
+      </div>
+      <div class="field">
+        <label>Empire 汇率</label>
+        <input type="number" id="accRate" value="0.65" step="0.001" required>
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <button type="submit" class="btn btn-primary">➕ 添加账号</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ============ Tab 2: 策略设置 ============ -->
+  <div id="tab-strategy" class="tab-content">
+    <form id="strategyForm" class="form-grid">
+      <h3>汇率设置</h3>
+      <div class="field">
+        <label>Buff 汇率</label>
+        <input type="number" id="strBuffRate" value="0.138" step="0.001">
+      </div>
+      <div class="field">
+        <label>Empire 汇率（跟随当前账号）</label>
+        <input type="number" id="strEmpireRate" value="0.65" step="0.001" disabled>
+      </div>
+
+      <h3>捡漏设置</h3>
+      <div class="field">
+        <label>最低捡漏比例 (%)</label>
+        <input type="number" id="strMinDeal" value="15" step="0.1">
+      </div>
+      <div class="field">
+        <label>最大亏损比例 (%)</label>
+        <input type="number" id="strMaxLoss" value="-5" step="0.1">
+      </div>
+
+      <h3>价格区间 (USD)</h3>
+      <div class="field">
+        <label>最低价格</label>
+        <input type="number" id="strMinPrice" value="5" step="1">
+      </div>
+      <div class="field">
+        <label>最高价格</label>
+        <input type="number" id="strMaxPrice" value="2000" step="1">
+      </div>
+
+      <h3>出价设置</h3>
+      <div class="field">
+        <label>单件最高出价 ($)</label>
+        <input type="number" id="strMaxBid" value="500" step="1">
+      </div>
+      <div class="field">
+        <label>出价延迟 (ms)</label>
+        <input type="number" id="strBidDelay" value="500" step="10">
+      </div>
+
+      <h3>模式开关</h3>
+      <div class="field checkbox-row">
+        <label><input type="checkbox" id="strAutoBuy"> 市场自动购买</label>
+        <label><input type="checkbox" id="strAutoBid"> 拍卖自动出价</label>
+      </div>
+
+      <h3>名单过滤</h3>
+      <div class="field">
+        <label>白名单（每行一个，支持 * 通配符）</label>
+        <textarea id="strWhitelist" rows="3" placeholder="*AK-47*&#10;*AWP*"></textarea>
+      </div>
+      <div class="field">
+        <label>黑名单</label>
+        <textarea id="strBlacklist" rows="3" placeholder="*Safari*&#10;*Sand Dune*"></textarea>
+      </div>
+      <div class="field checkbox-row">
+        <label>磨损过滤:</label>
+        <label><input type="checkbox" class="wear-cb" value="Factory New" checked> FN</label>
+        <label><input type="checkbox" class="wear-cb" value="Minimal Wear" checked> MW</label>
+        <label><input type="checkbox" class="wear-cb" value="Field-Tested" checked> FT</label>
+        <label><input type="checkbox" class="wear-cb" value="Well-Worn"> WW</label>
+        <label><input type="checkbox" class="wear-cb" value="Battle-Scarred"> BS</label>
+      </div>
+
+      <div class="field">
+        <button type="submit" class="btn btn-primary">💾 保存策略</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ============ Tab 3: 数据管理 ============ -->
+  <div id="tab-data" class="tab-content">
+    <h3>导入导出</h3>
+    <div class="data-actions">
+      <button id="btnExport" class="btn btn-primary">💾 导出配置</button>
+      <button id="btnImport" class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
+        📂 导入配置
+      </button>
+      <input type="file" id="importFile" accept=".json" style="display:none">
+      <button id="btnClear" class="btn btn-danger">🗑️ 清除所有数据</button>
+    </div>
+    <p class="hint">导出包含所有配置和数据库。导入将覆盖当前数据，需重启服务。</p>
+    <div id="importStatus" class="status-msg hidden"></div>
+  </div>
+</div>
+
+<script src="options.js"></script>
+</body>
+</html>

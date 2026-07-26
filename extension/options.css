@@ -1,0 +1,94 @@
+/* options.css - 配置页面样式 */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  min-height: 100vh;
+}
+
+.config-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+h1 { font-size: 22px; color: #ffd700; margin-bottom: 20px; }
+h2 { font-size: 16px; color: #ccc; margin: 16px 0 8px; border-bottom: 1px solid #333; padding-bottom: 6px; }
+h3 { font-size: 14px; color: #999; margin: 14px 0 6px; }
+
+/* Tabs */
+.tabs { display: flex; gap: 2px; margin-bottom: 20px; }
+.tab {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  background: #16213e;
+  color: #999;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.tab:first-child { border-radius: 8px 0 0 8px; }
+.tab:last-child { border-radius: 0 8px 8px 0; }
+.tab.active { background: #ffd700; color: #1a1a2e; font-weight: 700; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* 表格 */
+table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #333; font-size: 13px; }
+th { color: #999; font-weight: 600; }
+.delete-btn { background: #c62828; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+
+/* 表单 */
+.form-grid { display: grid; gap: 10px; }
+.field { display: flex; flex-direction: column; }
+.field label { font-size: 12px; color: #999; margin-bottom: 4px; }
+.field input[type="text"],
+.field input[type="number"],
+.field input[type="password"],
+.field textarea,
+.field select {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #0f3460;
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+}
+.field input:focus, .field textarea:focus { border-color: #ffd700; }
+.checkbox-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.checkbox-row label { font-size: 13px; color: #ccc; display: flex; align-items: center; gap: 4px; }
+
+/* 按钮 */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all .2s;
+}
+.btn-primary { background: #4CAF50; color: #fff; }
+.btn-secondary { background: #0f3460; color: #ccc; }
+.btn-danger { background: #c62828; color: #fff; }
+.btn:hover { opacity: 0.85; }
+
+/* 数据管理 */
+.data-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+.hint { font-size: 11px; color: #666; margin-top: 8px; }
+.status-msg { padding: 10px; border-radius: 6px; margin: 10px 0; font-size: 13px; }
+.status-msg.success { background: #1b5e20; color: #4CAF50; }
+.status-msg.error { background: #b71c1c; color: #F44336; }
+
+.hidden { display: none; }

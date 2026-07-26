@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSGOEmpire 捡漏助手</title>
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+<div class="popup-container">
+  <!-- 标题栏 -->
+  <div class="header">
+    <h1>🔫 CSGOEmpire 捡漏助手</h1>
+    <span id="wsIndicator" class="ws-dot" title="后端连接状态">⚪</span>
+  </div>
+
+  <!-- 错误提示 -->
+  <div id="errorBanner" class="error-banner hidden">
+    ⚠️ 后端服务未连接。请确认已启动本地服务。
+  </div>
+
+  <!-- 账号选择 -->
+  <div class="section">
+    <label>账号</label>
+    <select id="accountSelect">
+      <option value="">-- 选择账号 --</option>
+    </select>
+  </div>
+
+  <!-- 余额 -->
+  <div class="section">
+    <div id="balanceDisplay" class="balance">💰 余额: --</div>
+  </div>
+
+  <!-- 模式切换 -->
+  <div class="section mode-row">
+    <button id="btnManual" class="mode-btn active">🖐️ 手动模式</button>
+    <button id="btnAuto" class="mode-btn">🤖 自动模式</button>
+  </div>
+
+  <!-- 引擎状态 -->
+  <div class="section">
+    <div class="status-row">
+      <span>市场监控</span>
+      <span id="marketStatus" class="status-dot stopped">🔴 已停止</span>
+    </div>
+    <div class="status-row">
+      <span>拍卖监控</span>
+      <span id="auctionStatus" class="status-dot stopped">🔴 已停止</span>
+    </div>
+  </div>
+
+  <!-- 今日统计 -->
+  <div class="section stats">
+    <div class="stat-item">
+      <span class="stat-label">市场捡漏</span>
+      <span id="marketStats">检测 0 | 购买 0</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">拍卖参与</span>
+      <span id="auctionStats">出价 0 | 拍得 0</span>
+    </div>
+  </div>
+
+  <!-- 快捷按钮 -->
+  <div class="section buttons">
+    <button id="btnToggleMarket" class="btn btn-start">▶️ 启动市场监控</button>
+    <button id="btnToggleAuction" class="btn btn-start">▶️ 启动拍卖监控</button>
+    <button id="btnOptions" class="btn btn-secondary">⚙️ 配置页</button>
+    <button id="btnMonitor" class="btn btn-secondary">📊 监控面板</button>
+  </div>
+
+  <div class="footer">
+    <span id="wsStatus">后端: 检测中...</span>
+  </div>
+</div>
+<script src="popup.js"></script>
+</body>
+</html>

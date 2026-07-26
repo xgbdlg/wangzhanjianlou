@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSGOEmpire 监控面板</title>
+<link rel="stylesheet" href="monitor.css">
+</head>
+<body>
+<div class="monitor-container">
+  <h1>📊 监控面板 <span id="connStatus" class="conn-badge disconnected">未连接</span></h1>
+
+  <!-- 双栏布局 -->
+  <div class="panels">
+    <!-- 左栏：市场捡漏 -->
+    <div class="panel">
+      <h2>🛒 市场捡漏 <button id="refreshMarket" class="btn-sm">🔄 刷新</button></h2>
+      <div class="table-wrap">
+        <table id="marketTable">
+          <thead>
+            <tr><th>时间</th><th>皮肤名称</th><th>磨损</th><th>Empire $</th><th>Buff $</th><th>折扣%</th><th>状态</th><th>操作</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 右栏：拍卖捡漏 -->
+    <div class="panel">
+      <h2>🔨 拍卖捡漏 <button id="refreshAuction" class="btn-sm">🔄 刷新</button></h2>
+      <div class="table-wrap">
+        <table id="auctionTable">
+          <thead>
+            <tr><th>皮肤名称</th><th>磨损</th><th>当前出价</th><th>Buff $</th><th>折扣%</th><th>状态</th><th>剩余</th><th>操作</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部日志 -->
+  <div class="log-panel">
+    <h2>📋 系统日志</h2>
+    <div id="logContainer" class="log-container"></div>
+  </div>
+</div>
+
+<script src="monitor.js"></script>
+</body>
+</html>
