@@ -4,7 +4,6 @@ __pycache__/
 *.so
 *.egg-info/
 dist/
-build/
 release/
 *.egg
 
@@ -37,9 +36,14 @@ env/
 .DS_Store
 Thumbs.db
 
-# PyInstaller
+# Build output
+dist/
+release/
 *.spec
 *.manifest
+
+# Build script (keep this)
+!build/build_backend.py
 
 # Test artifacts
 .csgoempire-bot/
