@@ -13,7 +13,8 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.responses import JSONResponse, HTMLResponse
 
 try:
     from dotenv import load_dotenv
@@ -74,10 +75,121 @@ CONFIG_FILE = LOG_DIR / "config.json"
 
 app = FastAPI(
     title="CSGOEmpire 双引擎捡漏助手",
-    description="P2P 市场 + 拍卖实时监控与自动捡漏后端",
+    description="支持 P2P 市场秒拍 + 3分钟拍卖竞价，自动对比 Buff 价格发现漏单。\n\n"
+                "**[使用流程]** 初始化 → 添加账号 → 配置策略 → 启动监控",
     version="1.0.0",
     redirect_slashes=False,
+    docs_url=None,  # 禁用默认 docs，使用下方自定义中文版
 )
+
+@app.get("/docs", include_in_schema=False)
+@app.get("/docs/", include_in_schema=False)
+async def chinese_docs():
+    html = get_swagger_ui_html(
+        openapi_url="/openapi.json",
+        title="CSGOEmpire 捡漏助手 - API 文档",
+        swagger_js_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js",
+        swagger_css_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css",
+        swagger_ui_parameters={
+            "defaultModelsExpandDepth": -1,
+            "displayRequestDuration": True,
+            "docExpansion": "list",
+            "filter": True,
+        },
+    )
+    # 注入中文化 JavaScript
+    zh_script = """
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const translations = {
+    // 顶部栏
+    'Explore': '探索',
+    'Select a spec': '选择接口',
+    // 搜索
+    'Filter by tag': '按标签筛选',
+    'search': '搜索接口...',
+    // 接口列表
+    'GET': '获取',
+    'POST': '创建',
+    'PUT': '更新',
+    'DELETE': '删除',
+    'PATCH': '修补',
+    'OPTIONS': '选项',
+    'HEAD': '头部',
+    // 接口详情
+    'Parameters': '请求参数',
+    'Try it out': '试用',
+    'Cancel': '取消',
+    'Execute': '发送请求',
+    'Clear': '清除',
+    // 响应区
+    'Responses': '响应结果',
+    'Response body': '响应内容',
+    'Request URL': '请求地址',
+    'Server response': '服务器响应',
+    'Code': '状态码',
+    'Details': '详情',
+    'Curl': 'Curl命令',
+    // 模型区
+    'Schemas': '数据模型',
+    'No parameters': '无参数',
+    'No response body': '无响应体',
+    // 其他
+    'Authorize': '认证',
+    'Close': '关闭',
+    'Available authorizations': '可用认证方式',
+    'Description': '描述',
+    'Example Value': '示例值',
+    'Schema': '结构',
+    'Media type': '请求格式',
+    'Send empty request body': '发送空请求体',
+    'Deprecated': '已弃用',
+    'Required': '必填',
+    'string': '字符串',
+    'integer': '整数',
+    'number': '数字',
+    'boolean': '布尔值',
+    'array': '数组',
+    'object': '对象',
+    'Download': '下载',
+    'Copy to clipboard': '复制到剪贴板',
+    'Copied': '已复制',
+    'Request body': '请求体',
+    'application/json': 'JSON格式',
+    'Links': '链接',
+    'No links': '无链接',
+  };
+
+  // 使用 MutationObserver 监听 DOM 变化并翻译
+  function translate() {
+    // 翻译 aria-label 和按钮
+    document.querySelectorAll('[aria-label]').forEach(el => {
+      const key = el.getAttribute('aria-label');
+      if (translations[key]) el.setAttribute('aria-label', translations[key]);
+    });
+
+    // 翻译常见的文本节点
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(node => {
+      const text = node.textContent.trim();
+      if (text && translations[text]) {
+        node.textContent = translations[text];
+      }
+    });
+  }
+
+  // 初始翻译
+  setTimeout(translate, 500);
+  // 监听变化（展开折叠时）
+  new MutationObserver(translate).observe(document.body, { childList: true, subtree: true });
+});
+</script>
+"""
+    body = html.body.decode("utf-8")
+    body = body.replace("</head>", "</head>" + zh_script)
+    return HTMLResponse(body)
 
 origins = ["chrome-extension://*", "http://localhost"]
 app.add_middleware(
