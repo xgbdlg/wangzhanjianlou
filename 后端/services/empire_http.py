@@ -114,8 +114,13 @@ class EmpireHTTPClient:
             params={**c.get("params", {}), "per_page": per_page},
         )
 
+    async def get_socket_meta(self) -> dict:
+        """获取 WS 认证凭证。路径见 empire_config.py"""
+        c = CFG["get_socket_meta"]
+        return await self._request(c["method"], c["path"])
+
     async def get_balance(self) -> dict:
-        """获取用户余额。路径见 empire_config.py"""
+        """获取用户余额（从 metadata/socket 接口取 balance 字段）。"""
         c = CFG["get_balance"]
         return await self._request(c["method"], c["path"])
 

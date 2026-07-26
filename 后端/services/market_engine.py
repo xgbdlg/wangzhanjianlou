@@ -3,8 +3,7 @@
 #
 # 轮询 Empire 市场物品 → 对比 Buff 价格 → 计算折扣 → 过滤 → 自动购买
 #
-# ⚠️ 注意：Empire API 接口（get_items / withdraw_item）基于推测，
-# 实际响应格式和参数需根据抓包确认后调整。
+# ⚠️ API 路径和字段名见 后端/empire_config.py
 
 import asyncio
 import json
@@ -16,6 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio.session import async_sessionmaker
 
+from empire_config import ACTIVE_STATUSES, EMPIRE_HTTP as CFG
 from models import Account, MarketDeal, PurchaseRecord, StrategyConfig
 from services.name_normalizer import (
     check_wear_filter,
@@ -235,11 +235,8 @@ class MarketSnipeEngine:
     # ────────────────────────── 步骤 1: 获取市场物品 ──────────────────────────
 
     async def _fetch_market_items(self) -> list[dict]:
-        """调用 Empire HTTP API 获取市场物品列表。
-
-        ⚠️ 推测接口：GET /api/v2/trading/items 返回格式需抓包确认。
-        预期每个物品包含: id, market_hash_name, wear, price(coins), status
-        """
+        """调用 Empire HTTP API 获取市场物品列表。响应格式见 empire_config.py"""
+        list_key = CFG["get_items"]["response_fields"]["list_key"]
         try:
             response = await asyncio.wait_for(
                 self.http_client.get_items(per_page=100),
@@ -252,19 +249,16 @@ class MarketSnipeEngine:
             logger.warning("获取市场物品失败: %s", exc)
             return []
 
-        # ⚠️ 推测：响应格式可能是 {"data": [...]} 或直接是列表
         if isinstance(response, dict):
-            items = response.get("data", response.get("items", []))
+            # 从响应的 list_key (如 "withdrawals") 取物品列表
+            items = response.get(list_key, response.get("data", []))
         elif isinstance(response, list):
             items = response
         else:
             logger.warning("未知的市场物品响应格式: %s", type(response))
             return []
 
-        if not isinstance(items, list):
-            return []
-
-        return items
+        return items if isinstance(items, list) else []
 
     # ────────────────────────── 步骤 2: 过滤 + 去重 ──────────────────────────
 

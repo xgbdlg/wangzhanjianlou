@@ -16,7 +16,7 @@ from websockets.exceptions import ConnectionClosed, WebSocketException
 logger = logging.getLogger("empire_ws")
 
 # 连接配置
-WS_URL = "wss://csgoempire.com/socket.io/?EIO=3&transport=websocket"
+WS_URL = WSCFG["url"]           # 从 empire_config.py 读取
 HEARTBEAT_INTERVAL = 25         # 心跳间隔（秒）
 RECONNECT_DELAY_BASE = 5.0      # 重连基础延迟
 MAX_RECONNECTS = 10             # 最大重连次数

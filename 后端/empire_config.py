@@ -1,101 +1,120 @@
 """
 CSGOEmpire API 配置文件
 ========================
-所有标记 [待抓包] 的字段需要通过浏览器 DevTools 确认。
-抓包方法见文件末尾说明。
+数据来源: github.com/OfficialCSGOEmpire/API-Docs
+Base URL: https://csgoempire.com/api/v2
+认证方式: Authorization: Bearer {API_KEY}
+频率限制: 120 请求/60秒
 """
 
 # ═══════════════════════════════════════════════════════════
-# 1. HTTP API 端点
+# 1. HTTP API 端点 (已根据官方文档填写)
 # ═══════════════════════════════════════════════════════════
 
 EMPIRE_HTTP = {
-    # 市场物品列表 — 打开 CSGOEmpire 市场页面，看 Network → XHR
+    # 市场物品列表 — 来源 GET /api/v2/trades（返回 deposits + withdrawals）
     "get_items": {
         "method": "GET",
-        "path": "/api/v2/trading/items",       # [待抓包] 确认实际路径
+        "path": "/api/v2/trades",
         "params": {"per_page": 100},
-        "response_fields": {                     # [待抓包] 确认响应字段名
-            "item_id": "id",                     # Empire 物品ID的字段名
-            "name": "market_hash_name",          # 皮肤名的字段名
-            "wear": "wear",                      # 磨损的字段名
-            "price": "price",                    # 价格的字段名 (Coins)
-            "status": "status",                  # 状态的字段名
+        # 响应中取 .withdrawals[] 数组，每个元素含以下字段
+        "response_fields": {
+            "list_key": "withdrawals",     # 物品列表在响应中的 key
+            "item_id": "id",
+            "name": "market_hash_name",
+            "wear": "wear",
+            "price": "price",              # 平台币价格
+            "status": "status",
         },
     },
-    # 余额查询 — 刷新页面，看 Network → XHR → balance
+    # 余额查询
     "get_balance": {
         "method": "GET",
-        "path": "/api/v2/user/balance",          # [待抓包] 确认实际路径
+        "path": "/api/v2/metadata/socket",  # 此接口同时返回余额+WS认证信息
         "response_fields": {
-            "balance": "balance",                # 平台币余额字段名
-            "balance_usd": "balance_usd",        # USD 余额字段名
+            "balance": "balance",
+            "balance_usd": "balance_usd",
+            # WS 认证也在同个响应里
+            "socket_token": "socket_token",
+            "socket_signature": "socket_signature",
         },
     },
-    # 市场购买 — 在市场上点"购买"，看 Network 请求
+    # 市场购买（withdrawal = 从市场取回/购买物品）
     "withdraw_item": {
         "method": "POST",
-        "path": "/api/v2/trading/withdraw",      # [待抓包] 确认实际路径
+        "path": "/api/v2/trades/withdraw",
         "request_fields": {
-            "item_id": "item_id",                # 请求中物品ID的字段名
+            "item_id": "item_id",
         },
     },
-    # 拍卖出价 — 在拍卖中出价，看 Network 请求
+    # 拍卖出价
     "place_auction_bid": {
         "method": "POST",
-        "path": "/api/v2/trading/auction/bid",   # [待抓包] 确认实际路径
+        "path": "/api/v2/trades/bid",
         "request_fields": {
             "auction_id": "auction_id",
-            "amount": "amount",
+            "amount": "amount",             # 出价金额（平台币）
         },
+    },
+    # [新增] 获取 WS 认证凭证
+    "get_socket_meta": {
+        "method": "GET",
+        "path": "/api/v2/metadata/socket",
     },
 }
 
 # ═══════════════════════════════════════════════════════════
-# 2. WebSocket 配置
+# 2. WebSocket 配置 (已根据官方文档填写)
 # ═══════════════════════════════════════════════════════════
 
 EMPIRE_WS = {
-    # 连接地址 — 打开 DevTools → Network → WS 标签
-    "url": "wss://csgoempire.com/socket.io/?EIO=3&transport=websocket",  # [待抓包] 确认
+    # 交易 WebSocket 地址（Socket.IO v4）
+    "url": "wss://trade.csgoempire.com/trade",
 
-    # 认证消息 — 连接成功后发的第一条 42[...] 消息
+    # 认证方式: 先调 /api/v2/metadata/socket 获取 token + signature
+    # 然后 WS 连接时传入这两个值
     "auth": {
-        "event": "identify",                     # [待抓包] 认证事件名，可能是 "auth"/"login"
-        "payload": {                             # [待抓包] 认证参数
-            "uid": "",                           # 用户ID，可能需要先获取
-            "token": "",                         # API Key 或 Token
+        "event": "authenticate",
+        "payload": {
+            "token": "",          # 来自 metadata/socket 响应的 socket_token
+            "signature": "",      # 来自 metadata/socket 响应的 socket_signature
         },
     },
 
-    # 事件名映射 — 从 WS 消息中提取的事件名
+    # 事件名 (官方文档确认)
     "events": {
-        "auction_started": "auction_started",    # [待抓包] 拍卖开始事件
-        "auction_bid": "auction_bid",            # [待抓包] 有人出价事件
-        "auction_won": "auction_won",            # [待抓包] 拍卖中标事件
-        "auction_expired": "auction_expired",    # [待抓包] 拍卖过期事件
-        "new_item": "new_item",                  # [待抓包] 新物品上架
-        "item_sold": "item_sold",                # [待抓包] 物品售出
+        "new_item": "new_item",           # 新物品上架
+        "updated_item": "updated_item",   # 物品信息更新（价格/状态变化）
+        "auction_update": "auction_update",  # 拍卖更新（出价/状态变化）
+        "deleted_item": "deleted_item",   # 物品下架/售出
+        "trade_status": "trade_status",   # 交易状态变化
+        "deposit_failed": "deposit_failed",  # 存入失败
+        "timesync": "timesync",           # 时间同步
+        # 以下为拍卖相关 (auction_update 事件的子类型)
+        "auction_started": "auction_update",
+        "auction_bid": "auction_update",
+        "auction_won": "trade_status",
+        "auction_expired": "deleted_item",
     },
 
-    # 事件数据字段名 — 每个事件中数据的字段名
+    # 事件数据字段 (需实际验证)
     "event_fields": {
-        "auction_started": {
-            "auction_id": "id",                  # [待抓包]
-            "name": "market_hash_name",          # [待抓包]
-            "wear": "wear",                      # [待抓包]
-            "base_price": "base_price",          # [待抓包]
-            "starting_bid": "starting_bid",      # [待抓包]
+        "new_item": {
+            "auction_id": "id",
+            "name": "market_hash_name",
+            "wear": "wear",
+            "base_price": "base_price",
+            "starting_bid": "starting_bid",
         },
-        "auction_bid": {
-            "auction_id": "auction_id",          # [待抓包]
-            "new_bid": "new_bid",                # [待抓包]
-            "bidder_name": "bidder_name",        # [待抓包]
+        "auction_update": {
+            "auction_id": "id",
+            "new_bid": "highest_bid",
+            "bidder_name": "bidder_name",
         },
-        "auction_won": {
-            "auction_id": "auction_id",          # [待抓包]
-            "winner_name": "winner_name",        # [待抓包]
-            "final_bid": "final_bid",            # [待抓包]
+        "trade_status": {
+            "auction_id": "id",
+            "winner_name": "winner_name",
+            "final_bid": "final_bid",
         },
     },
 }
@@ -104,38 +123,28 @@ EMPIRE_WS = {
 # 3. 物品状态值
 # ═══════════════════════════════════════════════════════════
 
-# [待抓包] Empire 返回的 status 字段可能值
 ACTIVE_STATUSES = ["active", "available", "listed"]
 
 # ═══════════════════════════════════════════════════════════
-# 抓包步骤
+# 4. 待确认项（需实际测试验证）
 # ═══════════════════════════════════════════════════════════
 """
-1. 打开 Chrome，登录 CSGOEmpire
-2. 按 F12 打开 DevTools
-3. 切换到 Network（网络）标签
-4. 勾选 "Preserve log"（保留日志）
+以下内容根据 npm 包 csgoempire-wrapper 和官方文档推断，需用真实 Key 测试:
 
-【抓 HTTP API】
-5. 浏览市场页面，观察 Network 中出现的 XHR/Fetch 请求
-6. 找到物品列表请求 → 记录 URL、参数、响应 JSON 结构
-7. 点击购买按钮 → 记录请求 URL、请求体、响应
-8. 进入拍卖页面 → 重复以上步骤
-9. 把上面 EMPIRE_HTTP 中的 [待抓包] 字段更新为实际值
+[需验证] withdraw_item 的路径可能为:
+         POST /api/v2/trades/withdraw  (创建取回/购买)
 
-【抓 WebSocket】
-10. 切换到 WS 标签（或 Network → 筛选 WS）
-11. 点击 WebSocket 连接 → Messages 标签
-12. 观察连接后服务器发的第一条消息（握手/认证相关）
-13. 在拍卖页面操作，观察收到的消息格式：
-    - 拍卖开始时收到的消息 → 记录事件名和数据字段
-    - 有人出价时收到的消息
-    - 拍卖结束时收到的消息
-14. 把上面 EMPIRE_WS 中的 [待抓包] 字段更新为实际值
+[需验证] place_auction_bid 的路径可能为:
+         POST /api/v2/trades/bid       (拍卖出价)
 
-【修改代码】
-15. 根据抓包结果修改：
-    - services/empire_http.py → 更新 HTTP 路径和响应解析
-    - services/empire_ws.py → 更新 WS 认证和事件名
-    - services/auction_engine.py → 更新事件数据字段名
+[需验证] WS 认证格式，实际可能是:
+         42["authenticate", {"token": "xxx", "signature": "xxx"}]
+
+[需验证] auction_update 事件的详细数据结构:
+         {"id": "...", "highest_bid": 1234, "bidder_name": "xxx"}
+
+[需验证] 市场购买成功后物品从 withdrawals 数组消失，
+         同时 WS 收到 deleted_item 事件
+
+如有问题，用浏览器 DevTools → Network 验证实际请求。
 """
