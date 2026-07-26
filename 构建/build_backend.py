@@ -4,7 +4,7 @@ import subprocess, sys
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
-BACKEND = ROOT / "backend"
+BACKEND = ROOT / "后端"
 
 def build():
     subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller", "-q"])
